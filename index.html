@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@raldylopez | Enlaces</title>
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    
+    <!-- Share Button -->
+    <button class="share-btn" id="shareBtn" aria-label="Compartir perfil">
+        <i class="bi bi-share"></i>
+    </button>
+
+    <div class="container">
+        
+        <!-- Profile Section -->
+        <header class="profile-section">
+            <div class="profile-image-container">
+                <img src="raldy.jpeg" alt="Raldy Lopez" class="profile-image">
+                <div class="profile-glow"></div>
+            </div>
+            
+            <h1 class="username">@raldylopez</h1>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span class="status-text">Disponible para proyectos</span>
+            </div>
+        </header>
+
+        <!-- Links Section -->
+        <section class="links-container">
+            
+            <!-- Portafolio de modelaje  -->
+            <a href="https://raldylopez20.github.io/Modeling-Portfolio/index.html" target="_blank" class="link-card modelaje-card" rel="noopener noreferrer">
+                <div class="card-left">
+                    <div class="icon-box modelaje-icon">
+                        <i class="bi bi-camera"></i>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-tag">COMP CARD</span>
+                        <span class="card-title">Portafolio de Modelaje 📸</span>
+                    </div>
+                </div>
+                <div class="card-right">
+                    <i class="bi bi-chevron-right chevron-icon"></i>
+                </div>
+            </a>
+
+            <!-- Pagina de Servicios -->
+            <a href="https://raldylopez20.github.io/Landing-page-personal-de-servicios/" class="link-card whatsapp-card">
+                <div class="card-left">
+                    <div class="icon-box whatsapp-icon">
+                        <i class="bi bi-laptop"></i>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-tag">FULL-STACK DEV</span>
+                        <span class="card-title">Páginas Web 💻</span>
+                    </div>
+                </div>
+                <div class="card-right">
+                    <i class="bi bi-chevron-right chevron-icon"></i>
+                </div>
+            </a>
+
+            <!-- Broma del mono -->
+            <a href="broma-mono.html" class="link-card custom-card">
+                <div class="card-left">
+                    <div class="icon-box custom-icon">
+                        <i class="bi bi-fire"></i>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-tag">EXCLUSIVE CONTENT</span>
+                        <span class="card-title">O.F 👁️🔥</span>
+                    </div>
+                </div>
+                <div class="card-right">
+                    <i class="bi bi-chevron-right chevron-icon"></i>
+                </div>
+            </a>
+
+        </section>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-text">Developed by Raldy Lopez ©</p>
+            <div class="social-links">
+                <a href="https://www.linkedin.com/in/raldy-lópez-368420230/" target="_blank" rel="noopener noreferrer" class="social-icon-btn linkedin-btn" aria-label="LinkedIn">
+                    <i class="bi bi-linkedin"></i>
+                </a>
+                <a href="https://instagram.com/raldylopez" target="_blank" rel="noopener noreferrer" class="social-icon-btn instagram-btn" aria-label="Instagram">
+                    <i class="bi bi-instagram"></i>
+                </a>
+                <a href="https://wa.me/18294635850" target="_blank" rel="noopener noreferrer" class="social-icon-btn whatsapp-btn" aria-label="WhatsApp">
+                    <i class="bi bi-whatsapp"></i>
+                </a>
+            </div>
+        </footer>
+
+    </div>
+    
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer">
+        <div class="toast-message">
+            <i class="bi bi-check-circle-fill toast-icon"></i>
+            <span class="toast-text">¡Enlace copiado al portapapeles! 🚀</span>
+        </div>
+    </div>
+
+    <!-- Particles Background Canvas -->
+    <canvas id="particles"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
