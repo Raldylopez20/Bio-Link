@@ -282,109 +282,47 @@ function showToast() {
 }
 
 // ========================================
-// EFECTO TEXT SCRAMBLE (OPTIMIZADO Y FLUIDO)
+// TRANSICIÓN FLUIDA DEL NOMBRE Y ROL (100% GPU)
 // ========================================
-class TextScramble {
-  constructor(el) {
-    this.el = el;
-    // Caracteres seguros sin < ni > para evitar errores de parseo HTML
-    this.chars = '!#%&*+=_~/?[]{}0123456789ABCDEFXYZ';
-    this.update = this.update.bind(this);
-  }
+function initTitleTransition() {
+    const roles = document.querySelectorAll('.role-text');
+    if (roles.length < 2) return;
 
-  setText(newText) {
-    // Usamos textContent para evitar reflows síncronos forzados (a diferencia de innerText)
-    const oldText = this.el.textContent.trim();
-    const length = Math.max(oldText.length, newText.length);
-    const promise = new Promise(resolve => (this.resolve = resolve));
-    this.queue = [];
-
-    // Tiempos ágiles y precisos: transición suave y estética en ~0.4s (no 80 frames lentos)
-    for (let i = 0; i < length; i++) {
-      const from = oldText[i] || '';
-      const to = newText[i] || '';
-      const start = Math.floor(Math.random() * 8);
-      const end = start + Math.floor(Math.random() * 12) + 6;
-      this.queue.push({ from, to, start, end });
-    }
-
-    cancelAnimationFrame(this.frameRequest);
-    this.frame = 0;
-    this.update();
-    return promise;
-  }
-
-  update() {
-    let output = '';
-    let complete = 0;
-
-    for (let i = 0, n = this.queue.length; i < n; i++) {
-      let { from, to, start, end, char } = this.queue[i];
-      if (this.frame >= end) {
-        complete++;
-        output += to;
-      } else if (this.frame >= start) {
-        if (!char || Math.random() < 0.35) {
-          char = this.randomChar();
-          this.queue[i].char = char;
-        }
-        output += `<span class="dud">${char}</span>`;
-      } else {
-        output += from;
-      }
-    }
-
-    this.el.innerHTML = output;
-
-    if (complete === this.queue.length) {
-      // Al terminar dejamos texto plano sin etiquetas intermedias
-      this.el.textContent = this.queue.map(item => item.to).join('');
-      this.resolve();
-    } else {
-      this.frameRequest = requestAnimationFrame(this.update);
-      this.frame++;
-    }
-  }
-
-  randomChar() {
-    return this.chars[Math.floor(Math.random() * this.chars.length)];
-  }
-}
-
-// Inicializar el scramble en el nombre de usuario
-const usernameEl = document.querySelector('.username');
-if (usernameEl) {
-    const scramble = new TextScramble(usernameEl);
-    const phrases = ['@raldylopez', 'Model & Developer'];
-    let counter = 1; // La primera frase ya está en el HTML, rotamos a la siguiente
+    let currentIndex = 0;
     let isTransitioning = false;
 
-    const nextPhrase = () => {
+    function nextTitle() {
         if (isTransitioning) return;
         isTransitioning = true;
 
-        scramble.setText(phrases[counter]).then(() => {
+        const current = roles[currentIndex];
+        currentIndex = (currentIndex + 1) % roles.length;
+        const next = roles[currentIndex];
+
+        current.classList.remove('active');
+        current.classList.add('exit');
+
+        next.classList.remove('exit');
+        next.classList.add('active');
+
+        setTimeout(() => {
+            current.classList.remove('exit');
             isTransitioning = false;
-            counter = (counter + 1) % phrases.length;
-            setTimeout(nextPhrase, 3200); // 3.2 segundos entre frases
-        });
-    };
+        }, 600);
+    }
 
-    // Esperar 3 segundos después de cargar la página antes de la primera transición
-    setTimeout(nextPhrase, 3000);
+    // Intervalo suave cada 3.5 segundos
+    setInterval(nextTitle, 3500);
 
-    // Scramble al pasar el mouse por encima (solo dispositivos con hover real)
-    if (window.matchMedia('(hover: hover)').matches) {
-        usernameEl.addEventListener('mouseenter', () => {
-            if (isTransitioning) return;
-            isTransitioning = true;
-            const currentText = phrases[counter === 0 ? phrases.length - 1 : counter - 1];
-            scramble.setText(currentText).then(() => {
-                isTransitioning = false;
-            });
-        });
+    // Permite tocar o hacer click para alternar inmediatamente
+    const usernameEl = document.getElementById('username');
+    if (usernameEl) {
+        usernameEl.style.cursor = 'pointer';
+        usernameEl.addEventListener('click', nextTitle);
     }
 }
+
+initTitleTransition();
 
 // Efecto magnético para botones de redes sociales (solo en pantallas con puntero/mouse)
 function initMagneticLinks() {
