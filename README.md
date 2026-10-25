@@ -22,4 +22,4 @@ Proyecto personal de **Bio-link** diseñado para centralizar mis enlaces más im
 - GitHub Pages para despliegue
 
 ## 👀 Visualizar
-👉 [Ver Proyecto](https://raldylopez20.github.io/Link-Bio/)
+👉 [Ver Proyecto](https://raldylopez20.github.io/Bio-Link/)
