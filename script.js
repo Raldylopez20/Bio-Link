@@ -282,47 +282,118 @@ function showToast() {
 }
 
 // ========================================
-// TRANSICIÓN FLUIDA DEL NOMBRE Y ROL (100% GPU)
+// EFECTO TEXT SCRAMBLE / MATRIX (FLUIDO Y OPTIMIZADO)
 // ========================================
-function initTitleTransition() {
-    const roles = document.querySelectorAll('.role-text');
-    if (roles.length < 2) return;
+class TextScramble {
+  constructor(el) {
+    this.el = el;
+    // Símbolos Matrix limpios sin caracteres HTML como < o > que rompan el parseo
+    this.chars = '!#%&*+=_~/?[]{}0123456789ABCDEFXYZ';
+    this.update = this.update.bind(this);
+  }
 
-    let currentIndex = 0;
+  setText(newText) {
+    const oldText = this.el.textContent.trim();
+    const length = Math.max(oldText.length, newText.length);
+    const promise = new Promise(resolve => (this.resolve = resolve));
+    this.queue = [];
+
+    // Duración de animación ajustada a ~0.4s para que sea ágil, eléctrica y fluida
+    for (let i = 0; i < length; i++) {
+      const from = oldText[i] || '';
+      const to = newText[i] || '';
+      const start = Math.floor(Math.random() * 8);
+      const end = start + Math.floor(Math.random() * 10) + 5;
+      this.queue.push({ from, to, start, end });
+    }
+
+    cancelAnimationFrame(this.frameRequest);
+    this.frame = 0;
+    this.update();
+    return promise;
+  }
+
+  update() {
+    let output = '';
+    let complete = 0;
+
+    for (let i = 0, n = this.queue.length; i < n; i++) {
+      let { from, to, start, end, char } = this.queue[i];
+      if (this.frame >= end) {
+        complete++;
+        output += to;
+      } else if (this.frame >= start) {
+        if (!char || Math.random() < 0.35) {
+          char = this.randomChar();
+          this.queue[i].char = char;
+        }
+        output += `<span class="dud">${char}</span>`;
+      } else {
+        output += from;
+      }
+    }
+
+    this.el.innerHTML = output;
+
+    if (complete === this.queue.length) {
+      this.el.textContent = this.queue.map(item => item.to).join('');
+      this.resolve();
+    } else {
+      this.frameRequest = requestAnimationFrame(this.update);
+      this.frame++;
+    }
+  }
+
+  randomChar() {
+    return this.chars[Math.floor(Math.random() * this.chars.length)];
+  }
+}
+
+// Inicializar el scramble Matrix en el nombre de usuario
+const usernameEl = document.querySelector('.username');
+if (usernameEl) {
+    const scramble = new TextScramble(usernameEl);
+    const phrases = ['@raldylopez', 'Model & Developer'];
+    let counter = 1;
     let isTransitioning = false;
 
-    function nextTitle() {
+    const nextPhrase = () => {
         if (isTransitioning) return;
         isTransitioning = true;
 
-        const current = roles[currentIndex];
-        currentIndex = (currentIndex + 1) % roles.length;
-        const next = roles[currentIndex];
-
-        current.classList.remove('active');
-        current.classList.add('exit');
-
-        next.classList.remove('exit');
-        next.classList.add('active');
-
-        setTimeout(() => {
-            current.classList.remove('exit');
+        scramble.setText(phrases[counter]).then(() => {
             isTransitioning = false;
-        }, 600);
-    }
+            counter = (counter + 1) % phrases.length;
+            setTimeout(nextPhrase, 3500); // Pausa de 3.5 segundos entre cambios
+        });
+    };
 
-    // Intervalo suave cada 3.5 segundos
-    setInterval(nextTitle, 3500);
+    // Iniciar el primer cambio tras 3.5 segundos de carga limpia
+    setTimeout(nextPhrase, 3500);
 
-    // Permite tocar o hacer click para alternar inmediatamente
-    const usernameEl = document.getElementById('username');
-    if (usernameEl) {
+    // Efecto al pasar el cursor (solo en PC con mouse real)
+    if (window.matchMedia('(hover: hover)').matches) {
         usernameEl.style.cursor = 'pointer';
-        usernameEl.addEventListener('click', nextTitle);
+        usernameEl.addEventListener('mouseenter', () => {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            const currentText = phrases[counter === 0 ? phrases.length - 1 : counter - 1];
+            scramble.setText(currentText).then(() => {
+                isTransitioning = false;
+            });
+        });
     }
-}
 
-initTitleTransition();
+    // Al hacer click o tap en móvil, también permite disparar el glitch Matrix
+    usernameEl.addEventListener('click', () => {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        scramble.setText(phrases[counter]).then(() => {
+            isTransitioning = false;
+            counter = (counter + 1) % phrases.length;
+        });
+    });
+}
 
 // Efecto magnético para botones de redes sociales (solo en pantallas con puntero/mouse)
 function initMagneticLinks() {
