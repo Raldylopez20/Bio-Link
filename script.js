@@ -169,53 +169,30 @@ function init() {
 }
 
 function connect() {
-    const maxDist = isMobileDevice() ? 75 : 85;
-    const maxDistSq = maxDist * maxDist;
-    const pLen = particles.length;
+    // Solo trazamos líneas interactivas cuando el usuario mueve el dedo o el mouse.
+    // Esto evita invalidar constantemente el fondo bajo las tarjetas con backdrop-filter,
+    // garantizando 60/120 FPS estables sin sobrecalentar la GPU en Safari.
+    if (mouse.x === null || mouse.y === null) return;
 
-    // 1. Unificamos el trazado de líneas en un solo batch draw (reduce decenas de llamadas GPU a 1)
-    ctx.beginPath();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-    ctx.lineWidth = 0.5;
+    const mouseRadius = mouse.radius;
+    const mouseRadiusSq = mouseRadius * mouseRadius;
+    const pLen = particles.length;
 
     for (let a = 0; a < pLen; a++) {
         const pa = particles[a];
-        for (let b = a + 1; b < pLen; b++) {
-            const pb = particles[b];
-            const dx = pa.x - pb.x;
-            const dy = pa.y - pb.y;
-            const distSq = dx * dx + dy * dy;
+        const dx = pa.x - mouse.x;
+        const dy = pa.y - mouse.y;
+        const distSq = dx * dx + dy * dy;
 
-            // Comparación de distancia al cuadrado (evita Math.sqrt innecesario en cada iteración)
-            if (distSq < maxDistSq) {
-                ctx.moveTo(pa.x, pa.y);
-                ctx.lineTo(pb.x, pb.y);
-            }
-        }
-    }
-    ctx.stroke();
-
-    // 2. Conexión interactiva con el puntero/touch
-    if (mouse.x !== null && mouse.y !== null) {
-        const mouseRadius = mouse.radius;
-        const mouseRadiusSq = mouseRadius * mouseRadius;
-
-        for (let a = 0; a < pLen; a++) {
-            const pa = particles[a];
-            const dx = pa.x - mouse.x;
-            const dy = pa.y - mouse.y;
-            const distSq = dx * dx + dy * dy;
-
-            if (distSq < mouseRadiusSq) {
-                const dist = Math.sqrt(distSq);
-                const opacity = (1 - dist / mouseRadius) * 0.25;
-                ctx.beginPath();
-                ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
-                ctx.lineWidth = 0.8;
-                ctx.moveTo(pa.x, pa.y);
-                ctx.lineTo(mouse.x, mouse.y);
-                ctx.stroke();
-            }
+        if (distSq < mouseRadiusSq) {
+            const dist = Math.sqrt(distSq);
+            const opacity = (1 - dist / mouseRadius) * 0.28;
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
+            ctx.lineWidth = 0.8;
+            ctx.moveTo(pa.x, pa.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
         }
     }
 }
