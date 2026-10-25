@@ -205,14 +205,18 @@ body::after {
     font-weight: 700;
     letter-spacing: -0.5px;
     margin-bottom: 0.6rem;
-    min-height: 2rem; /* Evitar saltos de línea durante la animación */
+    min-height: 2.2rem; /* Evitar saltos de línea durante la animación */
+    display: inline-block;
+    text-align: center;
+    white-space: nowrap;
     contain: layout; /* Evita que el cambio de texto provoque reflow en toda la página */
+    -webkit-font-smoothing: antialiased;
 }
 
 .dud {
-    color: rgba(255, 255, 255, 0.35);
-    font-family: monospace;
-    opacity: 0.8;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: inherit; /* Hereda Poppins para evitar saltos bruscos de ancho entre caracteres */
+    opacity: 0.85;
 }
 
 /* Badge de estado disponible */

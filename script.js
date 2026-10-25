@@ -305,27 +305,32 @@ function showToast() {
 }
 
 // ========================================
-// EFECTO TEXT SCRAMBLE (DE CODEPEN)
+// EFECTO TEXT SCRAMBLE (OPTIMIZADO Y FLUIDO)
 // ========================================
 class TextScramble {
   constructor(el) {
     this.el = el;
-    this.chars = '!<>-_\/[]{}—=+*^?#________';
+    // Caracteres seguros sin < ni > para evitar errores de parseo HTML
+    this.chars = '!#%&*+=_~/?[]{}0123456789ABCDEFXYZ';
     this.update = this.update.bind(this);
   }
 
   setText(newText) {
-    const oldText = this.el.innerText;
+    // Usamos textContent para evitar reflows síncronos forzados (a diferencia de innerText)
+    const oldText = this.el.textContent.trim();
     const length = Math.max(oldText.length, newText.length);
     const promise = new Promise(resolve => (this.resolve = resolve));
     this.queue = [];
+
+    // Tiempos ágiles y precisos: transición suave y estética en ~0.4s (no 80 frames lentos)
     for (let i = 0; i < length; i++) {
       const from = oldText[i] || '';
       const to = newText[i] || '';
-      const start = Math.floor(Math.random() * 40);
-      const end = start + Math.floor(Math.random() * 40);
+      const start = Math.floor(Math.random() * 8);
+      const end = start + Math.floor(Math.random() * 12) + 6;
       this.queue.push({ from, to, start, end });
     }
+
     cancelAnimationFrame(this.frameRequest);
     this.frame = 0;
     this.update();
@@ -335,13 +340,14 @@ class TextScramble {
   update() {
     let output = '';
     let complete = 0;
+
     for (let i = 0, n = this.queue.length; i < n; i++) {
       let { from, to, start, end, char } = this.queue[i];
       if (this.frame >= end) {
         complete++;
         output += to;
       } else if (this.frame >= start) {
-        if (!char || Math.random() < 0.28) {
+        if (!char || Math.random() < 0.35) {
           char = this.randomChar();
           this.queue[i].char = char;
         }
@@ -350,15 +356,19 @@ class TextScramble {
         output += from;
       }
     }
+
     this.el.innerHTML = output;
+
     if (complete === this.queue.length) {
+      // Al terminar dejamos texto plano sin etiquetas intermedias
+      this.el.textContent = this.queue.map(item => item.to).join('');
       this.resolve();
     } else {
       this.frameRequest = requestAnimationFrame(this.update);
       this.frame++;
     }
   }
-  
+
   randomChar() {
     return this.chars[Math.floor(Math.random() * this.chars.length)];
   }
@@ -369,33 +379,40 @@ const usernameEl = document.querySelector('.username');
 if (usernameEl) {
     const scramble = new TextScramble(usernameEl);
     const phrases = ['@raldylopez', 'Model & Developer'];
-    let counter = 0;
+    let counter = 1; // La primera frase ya está en el HTML, rotamos a la siguiente
     let isTransitioning = false;
-    
+
     const nextPhrase = () => {
         if (isTransitioning) return;
-        scramble.setText(phrases[counter]).then(() => {
-            setTimeout(nextPhrase, 3000); // Cambia de frase cada 3 segundos
-        });
-        counter = (counter + 1) % phrases.length;
-    };
-    
-    // Iniciar animación automática
-    nextPhrase();
-    
-    // Scramble al pasar el mouse por encima
-    usernameEl.addEventListener('mouseenter', () => {
         isTransitioning = true;
-        // Reinicia con la frase actual para dar el efecto de glitch al entrar
-        const currentText = phrases[counter === 0 ? phrases.length - 1 : counter - 1];
-        scramble.setText(currentText).then(() => {
+
+        scramble.setText(phrases[counter]).then(() => {
             isTransitioning = false;
+            counter = (counter + 1) % phrases.length;
+            setTimeout(nextPhrase, 3200); // 3.2 segundos entre frases
         });
-    });
+    };
+
+    // Esperar 3 segundos después de cargar la página antes de la primera transición
+    setTimeout(nextPhrase, 3000);
+
+    // Scramble al pasar el mouse por encima (solo dispositivos con hover real)
+    if (window.matchMedia('(hover: hover)').matches) {
+        usernameEl.addEventListener('mouseenter', () => {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            const currentText = phrases[counter === 0 ? phrases.length - 1 : counter - 1];
+            scramble.setText(currentText).then(() => {
+                isTransitioning = false;
+            });
+        });
+    }
 }
 
-// Efecto magnético para botones de redes sociales (estilo CodePen)
+// Efecto magnético para botones de redes sociales (solo en pantallas con puntero/mouse)
 function initMagneticLinks() {
+    if (!window.matchMedia('(hover: hover)').matches) return;
+
     const links = document.querySelectorAll('.social-icon-btn');
     links.forEach(link => {
         link.addEventListener('mousemove', (e) => {
