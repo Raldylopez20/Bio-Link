@@ -169,29 +169,118 @@ body::after {
     object-fit: cover;
     position: relative;
     z-index: 2;
-    border: 2px solid rgba(255, 255, 255, 0.15);
+    border: 2.5px solid #ffeb3b;
+    box-shadow: 
+        0 0 14px rgba(255, 235, 59, 0.75),
+        0 0 28px rgba(245, 158, 11, 0.45),
+        inset 0 0 10px rgba(255, 235, 59, 0.35);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Glow dorado sutil estilo Apple (100% GPU / Cero CPU) */
+/* ========================================
+   AURA DORADA SUPER SAIYAJIN (AMARILLO PURO)
+   ======================================== */
 .profile-glow {
     position: absolute;
-    top: -6px;
-    left: -6px;
-    right: -6px;
-    bottom: -6px;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.45) 20%, rgba(245, 158, 11, 0.15) 55%, transparent 72%);
-    box-shadow: 0 0 25px rgba(245, 158, 11, 0.4), 0 0 45px rgba(245, 158, 11, 0.15);
+    background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(255, 235, 59, 0.85) 26%, 
+        rgba(251, 191, 36, 0.55) 50%, 
+        rgba(245, 158, 11, 0.25) 70%, 
+        transparent 85%);
+    box-shadow: 
+        0 0 22px rgba(255, 235, 59, 0.8),
+        0 0 45px rgba(245, 158, 11, 0.6),
+        0 0 75px rgba(245, 158, 11, 0.25);
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
     will-change: transform, opacity;
-    animation: pulse-glow 3.5s ease-in-out infinite alternate;
+    animation: ssj-core-aura 2.2s ease-in-out infinite alternate;
     z-index: 1;
 }
 
-@keyframes pulse-glow {
-    0% { transform: scale(0.97); opacity: 0.65; }
-    100% { transform: scale(1.04); opacity: 0.95; }
+/* Capa de Llama Exterior Expansiva (Ki Vibrante) */
+.ssj-aura-flame {
+    position: absolute;
+    top: -18px;
+    left: -18px;
+    right: -18px;
+    bottom: -18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, 
+        rgba(255, 235, 59, 0.32) 15%, 
+        rgba(245, 158, 11, 0.18) 50%, 
+        transparent 75%);
+    box-shadow: 0 0 35px rgba(255, 215, 0, 0.35);
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    will-change: transform, opacity;
+    animation: ssj-flame-wave 1.8s ease-in-out infinite alternate;
+    z-index: 0;
+}
+
+@keyframes ssj-core-aura {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.78;
+        box-shadow: 
+            0 0 18px rgba(255, 235, 59, 0.7),
+            0 0 38px rgba(245, 158, 11, 0.45),
+            0 0 60px rgba(245, 158, 11, 0.2);
+    }
+    50% {
+        transform: scale(1.04);
+        opacity: 0.98;
+        box-shadow: 
+            0 0 28px rgba(255, 245, 100, 0.9),
+            0 0 52px rgba(255, 190, 0, 0.7),
+            0 0 85px rgba(245, 158, 11, 0.35);
+    }
+    100% {
+        transform: scale(0.97);
+        opacity: 0.85;
+        box-shadow: 
+            0 0 22px rgba(255, 235, 59, 0.8),
+            0 0 44px rgba(245, 158, 11, 0.5),
+            0 0 70px rgba(245, 158, 11, 0.25);
+    }
+}
+
+@keyframes ssj-flame-wave {
+    0% {
+        transform: scale(0.94) rotate(0deg);
+        opacity: 0.45;
+    }
+    50% {
+        transform: scale(1.08) rotate(3deg);
+        opacity: 0.85;
+    }
+    100% {
+        transform: scale(0.98) rotate(-3deg);
+        opacity: 0.55;
+    }
+}
+
+/* Reacción al pasar el mouse por la foto */
+.profile-image-container:hover .profile-image {
+    transform: scale(1.04);
+    box-shadow: 
+        0 0 18px rgba(255, 255, 255, 0.9),
+        0 0 32px rgba(255, 235, 59, 0.8),
+        inset 0 0 14px rgba(255, 235, 59, 0.5);
+}
+
+.profile-image-container:hover .profile-glow {
+    transform: scale(1.08);
+    box-shadow: 
+        0 0 32px rgba(255, 245, 100, 0.95),
+        0 0 60px rgba(255, 190, 0, 0.75),
+        0 0 95px rgba(245, 158, 11, 0.4);
 }
 
 .username {
