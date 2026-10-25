@@ -282,13 +282,14 @@ function showToast() {
 }
 
 // ========================================
-// EFECTO TEXT SCRAMBLE / MATRIX (FLUIDO Y OPTIMIZADO)
+// ========================================
+// EFECTO TEXT SCRAMBLE / MATRIX (OPTIMIZADO PARA SAFARI Y MOBILE)
 // ========================================
 class TextScramble {
   constructor(el) {
     this.el = el;
-    // Símbolos Matrix limpios sin caracteres HTML como < o > que rompan el parseo
-    this.chars = '!#%&*+=_~/?[]{}0123456789ABCDEFXYZ';
+    // Símbolos Matrix limpios sin caracteres HTML problemáticos (<, >, &)
+    this.chars = '!#%*+=_~/?[]{}0123456789ABCDEFXYZ';
     this.update = this.update.bind(this);
   }
 
@@ -298,7 +299,7 @@ class TextScramble {
     const promise = new Promise(resolve => (this.resolve = resolve));
     this.queue = [];
 
-    // Duración de animación ajustada a ~0.4s para que sea ágil, eléctrica y fluida
+    // Duración de animación ajustada a ~0.4s para que sea ágil y fluida
     for (let i = 0; i < length; i++) {
       const from = oldText[i] || '';
       const to = newText[i] || '';
@@ -321,7 +322,7 @@ class TextScramble {
       let { from, to, start, end, char } = this.queue[i];
       if (this.frame >= end) {
         complete++;
-        output += to;
+        output += (to === '&' ? '&amp;' : to);
       } else if (this.frame >= start) {
         if (!char || Math.random() < 0.35) {
           char = this.randomChar();
@@ -329,7 +330,7 @@ class TextScramble {
         }
         output += `<span class="dud">${char}</span>`;
       } else {
-        output += from;
+        output += (from === '&' ? '&amp;' : from);
       }
     }
 
@@ -337,7 +338,7 @@ class TextScramble {
 
     if (complete === this.queue.length) {
       this.el.textContent = this.queue.map(item => item.to).join('');
-      this.resolve();
+      if (this.resolve) this.resolve();
     } else {
       this.frameRequest = requestAnimationFrame(this.update);
       this.frame++;
@@ -356,42 +357,48 @@ if (usernameEl) {
     const phrases = ['@raldylopez', 'Model & Developer'];
     let counter = 1;
     let isTransitioning = false;
+    let timer = null;
 
-    const nextPhrase = () => {
+    function triggerNext() {
         if (isTransitioning) return;
         isTransitioning = true;
+        if (timer) {
+            clearTimeout(timer);
+            timer = null;
+        }
 
         scramble.setText(phrases[counter]).then(() => {
             isTransitioning = false;
             counter = (counter + 1) % phrases.length;
-            setTimeout(nextPhrase, 3500); // Pausa de 3.5 segundos entre cambios
+            timer = setTimeout(triggerNext, 3000); // 3.0 segundos exactos
         });
-    };
+    }
 
-    // Iniciar el primer cambio tras 3.5 segundos de carga limpia
-    setTimeout(nextPhrase, 3500);
+    // Iniciar el primer cambio a los 3.0 segundos
+    timer = setTimeout(triggerNext, 3000);
+
+    // Si el usuario cambia de app o pestaña en Safari/iOS y regresa, reanuda el ciclo
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            if (timer) clearTimeout(timer);
+            isTransitioning = false;
+            timer = setTimeout(triggerNext, 1000);
+        }
+    });
 
     // Efecto al pasar el cursor (solo en PC con mouse real)
     if (window.matchMedia('(hover: hover)').matches) {
         usernameEl.style.cursor = 'pointer';
         usernameEl.addEventListener('mouseenter', () => {
             if (isTransitioning) return;
-            isTransitioning = true;
-            const currentText = phrases[counter === 0 ? phrases.length - 1 : counter - 1];
-            scramble.setText(currentText).then(() => {
-                isTransitioning = false;
-            });
+            triggerNext();
         });
     }
 
-    // Al hacer click o tap en móvil, también permite disparar el glitch Matrix
+    // Al hacer click o tap en móvil, dispara de inmediato y reinicia el ciclo de 3.0s
     usernameEl.addEventListener('click', () => {
         if (isTransitioning) return;
-        isTransitioning = true;
-        scramble.setText(phrases[counter]).then(() => {
-            isTransitioning = false;
-            counter = (counter + 1) % phrases.length;
-        });
+        triggerNext();
     });
 }
 
