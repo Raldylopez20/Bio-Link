@@ -1,53 +1,96 @@
 const canvas = document.getElementById('particles');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { alpha: true });
 
 let width, height;
 let particles = [];
-const mouse = { x: null, y: null, radius: 120 };
+let dpr = 1;
+const mouse = { x: null, y: null, radius: 100 };
 
-// Resize canvas
-function resize() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
+// Detectar dispositivo móvil
+function isMobileDevice() {
+    return window.innerWidth < 768;
 }
-window.addEventListener('resize', resize);
-resize();
 
-// Mouse listeners
+// Control del tamaño del canvas resistente a la barra de dirección de Safari iOS
+let lastWidth = 0;
+let lastHeight = 0;
+
+function resize() {
+    const newWidth = window.innerWidth;
+    const newHeight = window.innerHeight;
+
+    // En Safari móvil, el scroll oculta/muestra la barra de direcciones y dispara resize con variación leve de altura.
+    // Solo redimensionamos y recreamos partículas si cambia el ancho (rotación/redimensionado)
+    // o si el cambio de altura es considerable (> 120px, ej. teclado en pantalla).
+    if (newWidth === lastWidth && Math.abs(newHeight - lastHeight) < 120 && particles.length > 0) {
+        return;
+    }
+
+    lastWidth = newWidth;
+    lastHeight = newHeight;
+    width = newWidth;
+    height = newHeight;
+
+    // Limitamos DPR a 1.5 máximo en pantallas Retina para mantener nitidez sin saturar GPU/RAM en WebKit
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+
+    init();
+}
+
+// Eventos de mouse pasivos
 window.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
     mouse.y = e.clientY;
-});
+}, { passive: true });
 
 window.addEventListener('mouseleave', () => {
     mouse.x = null;
     mouse.y = null;
-});
+}, { passive: true });
 
-// Touch listeners for mobile
-window.addEventListener('touchmove', (e) => {
-    if (e.touches.length > 0) {
+// Eventos táctiles pasivos (crucial para que Safari no bloquee el scroll)
+window.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length > 0) {
         mouse.x = e.touches[0].clientX;
         mouse.y = e.touches[0].clientY;
     }
-});
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+    if (e.touches && e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+    }
+}, { passive: true });
 
 window.addEventListener('touchend', () => {
     mouse.x = null;
     mouse.y = null;
-});
+}, { passive: true });
+
+window.addEventListener('touchcancel', () => {
+    mouse.x = null;
+    mouse.y = null;
+}, { passive: true });
 
 class Particle {
     constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.baseSize = Math.random() * 2.0 + 0.8; // Estrellas más notorias (0.8px a 2.8px)
+        this.baseSize = Math.random() * 1.8 + 0.8; // 0.8px a 2.6px
         this.size = this.baseSize;
-        this.speedX = (Math.random() - 0.5) * 0.2;
-        this.speedY = (Math.random() - 0.5) * 0.2;
-        this.baseOpacity = Math.random() * 0.4 + 0.3; // Opacidad base más brillante (0.3 a 0.7)
+        this.speedX = (Math.random() - 0.5) * 0.22;
+        this.speedY = (Math.random() - 0.5) * 0.22;
+        this.baseOpacity = Math.random() * 0.4 + 0.3;
         this.opacity = this.baseOpacity;
-        this.twinkleSpeed = Math.random() * 0.04 + 0.02; // Titileo ligeramente más rápido y dinámico
+        this.twinkleSpeed = Math.random() * 0.035 + 0.015;
         this.angle = Math.random() * Math.PI * 2;
         
         // Paleta de colores solicitada: Azul, Rosa, Dorado, Morado, Blanco
@@ -65,12 +108,12 @@ class Particle {
         this.x += this.speedX;
         this.y += this.speedY;
 
-        // Oscilación más pronunciada de opacidad y tamaño para notar el brillo fuerte
+        // Oscilación suave de opacidad y tamaño
         this.angle += this.twinkleSpeed;
         this.opacity = Math.max(0.15, Math.min(1.0, this.baseOpacity + Math.sin(this.angle) * 0.45));
-        this.size = Math.max(0.5, this.baseSize + Math.sin(this.angle) * 0.85);
+        this.size = Math.max(0.5, this.baseSize + Math.sin(this.angle) * 0.75);
 
-        // Comportamiento de límites (wrap)
+        // Límites de pantalla (wrap)
         if (this.x < 0) this.x = width;
         if (this.x > width) this.x = 0;
         if (this.y < 0) this.y = height;
@@ -80,40 +123,32 @@ class Particle {
     draw() {
         const { r, g, b } = this.color;
 
-        // 1. Dibujar halo de brillo (Glow) para las estrellas más grandes cuando brillan fuerte
-        if (this.opacity > 0.65 && this.baseSize > 1.4) {
-            const glowSize = this.size * 3.5;
-            const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowSize);
-            gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${this.opacity * 0.35})`);
-            gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${this.opacity * 0.1})`);
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            
-            ctx.fillStyle = gradient;
+        // 1. Halo suave de brillo (optimizado para Safari sin crear radial-gradient por cuadro)
+        if (this.opacity > 0.65 && this.baseSize > 1.3) {
+            const glowSize = this.size * 3.2;
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.opacity * 0.18})`;
             ctx.beginPath();
             ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // 2. Dibujar el núcleo de la estrella
+        // 2. Núcleo nítido de la estrella
         ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${this.opacity})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3. Dibujar destello en cruz (4-point sparkle) para estrellas "con poder" en su brillo máximo
-        if (this.opacity > 0.75 && this.baseSize > 1.4) {
-            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${(this.opacity - 0.7) * 2})`;
-            ctx.lineWidth = 0.8;
+        // 3. Destello en cruz (4-point sparkle) en su brillo máximo
+        if (this.opacity > 0.8 && this.baseSize > 1.4) {
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${(this.opacity - 0.7) * 1.8})`;
+            ctx.lineWidth = 0.7;
             ctx.beginPath();
             
-            // Línea horizontal del destello
-            const flareWidth = this.size * 3.0;
-            ctx.moveTo(this.x - flareWidth, this.y);
-            ctx.lineTo(this.x + flareWidth, this.y);
-            
-            // Línea vertical del destello
-            ctx.moveTo(this.x, this.y - flareWidth);
-            ctx.lineTo(this.x, this.y + flareWidth);
+            const flare = this.size * 2.8;
+            ctx.moveTo(this.x - flare, this.y);
+            ctx.lineTo(this.x + flare, this.y);
+            ctx.moveTo(this.x, this.y - flare);
+            ctx.lineTo(this.x, this.y + flare);
             
             ctx.stroke();
         }
@@ -122,49 +157,70 @@ class Particle {
 
 function init() {
     particles = [];
-    // Cantidad adaptativa incrementada para poblar más el cielo estrellado
-    const numberOfParticles = Math.min(100, Math.floor((width * height) / 12000));
+    // Cantidad adaptativa según dispositivo (móvil vs escritorio) para máximo rendimiento
+    const mobile = isMobileDevice();
+    const maxParticles = mobile ? 40 : 80;
+    const divisor = mobile ? 18000 : 13000;
+    const numberOfParticles = Math.min(maxParticles, Math.max(25, Math.floor((width * height) / divisor)));
+
     for (let i = 0; i < numberOfParticles; i++) {
         particles.push(new Particle());
     }
 }
 
 function connect() {
-    for (let a = 0; a < particles.length; a++) {
-        for (let b = a + 1; b < particles.length; b++) {
-            const dx = particles[a].x - particles[b].x;
-            const dy = particles[a].y - particles[b].y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+    const maxDist = isMobileDevice() ? 75 : 85;
+    const maxDistSq = maxDist * maxDist;
+    const pLen = particles.length;
 
-            if (distance < 90) {
-                const opacity = (1 - distance / 90) * 0.12;
-                ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-                ctx.lineWidth = 0.5;
-                ctx.beginPath();
-                ctx.moveTo(particles[a].x, particles[a].y);
-                ctx.lineTo(particles[b].x, particles[b].y);
-                ctx.stroke();
+    // 1. Unificamos el trazado de líneas en un solo batch draw (reduce decenas de llamadas GPU a 1)
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 0.5;
+
+    for (let a = 0; a < pLen; a++) {
+        const pa = particles[a];
+        for (let b = a + 1; b < pLen; b++) {
+            const pb = particles[b];
+            const dx = pa.x - pb.x;
+            const dy = pa.y - pb.y;
+            const distSq = dx * dx + dy * dy;
+
+            // Comparación de distancia al cuadrado (evita Math.sqrt innecesario en cada iteración)
+            if (distSq < maxDistSq) {
+                ctx.moveTo(pa.x, pa.y);
+                ctx.lineTo(pb.x, pb.y);
             }
         }
+    }
+    ctx.stroke();
 
-        // Conexión interactiva con el mouse/touch
-        if (mouse.x !== null && mouse.y !== null) {
-            const dxMouse = particles[a].x - mouse.x;
-            const dyMouse = particles[a].y - mouse.y;
-            const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+    // 2. Conexión interactiva con el puntero/touch
+    if (mouse.x !== null && mouse.y !== null) {
+        const mouseRadius = mouse.radius;
+        const mouseRadiusSq = mouseRadius * mouseRadius;
 
-            if (distMouse < mouse.radius) {
-                const opacity = (1 - distMouse / mouse.radius) * 0.22;
-                ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`; // Resplandor púrpura sutil
-                ctx.lineWidth = 0.7;
+        for (let a = 0; a < pLen; a++) {
+            const pa = particles[a];
+            const dx = pa.x - mouse.x;
+            const dy = pa.y - mouse.y;
+            const distSq = dx * dx + dy * dy;
+
+            if (distSq < mouseRadiusSq) {
+                const dist = Math.sqrt(distSq);
+                const opacity = (1 - dist / mouseRadius) * 0.25;
                 ctx.beginPath();
-                ctx.moveTo(particles[a].x, particles[a].y);
+                ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
+                ctx.lineWidth = 0.8;
+                ctx.moveTo(pa.x, pa.y);
                 ctx.lineTo(mouse.x, mouse.y);
                 ctx.stroke();
             }
         }
     }
 }
+
+let animationFrameId;
 
 function animate() {
     ctx.clearRect(0, 0, width, height);
@@ -173,13 +229,28 @@ function animate() {
         particles[i].draw();
     }
     connect();
-    requestAnimationFrame(animate);
+    animationFrameId = requestAnimationFrame(animate);
 }
 
-// Re-iniciar en resize
-window.addEventListener('resize', init);
+// Pausar animación cuando la pestaña o pantalla esté oculta (ahorra batería en Safari/móviles)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        cancelAnimationFrame(animationFrameId);
+    } else {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = requestAnimationFrame(animate);
+    }
+});
 
-init();
+// Listener de resize con debounce para evitar cálculos innecesarios
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 100);
+}, { passive: true });
+
+// Inicialización inicial
+resize();
 animate();
 
 // ========================================

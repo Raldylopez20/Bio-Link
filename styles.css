@@ -24,6 +24,11 @@
     box-sizing: border-box;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -33,48 +38,57 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* ========================================
-   NEBULA / AURORA BACKGROUND EFFECTS
+   NEBULA / AURORA BACKGROUND EFFECTS (OPTIMIZADO PARA SAFARI & WEBKit)
    ======================================== */
 
 body::before, body::after {
     content: "";
     position: fixed;
-    width: 350px;
-    height: 350px;
+    width: 360px;
+    height: 360px;
     border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.12;
+    opacity: 0.14;
     z-index: -2;
     pointer-events: none;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+    -webkit-filter: blur(40px);
+    filter: blur(40px);
 }
 
 body::before {
-    background: radial-gradient(circle, var(--neon-purple), transparent 70%);
+    background: radial-gradient(circle, var(--neon-purple) 0%, rgba(139, 92, 246, 0.35) 35%, transparent 70%);
     top: 15%;
     left: -10%;
     animation: float-blob-1 25s infinite alternate ease-in-out;
 }
 
 body::after {
-    background: radial-gradient(circle, var(--neon-blue), transparent 70%);
+    background: radial-gradient(circle, var(--neon-blue) 0%, rgba(59, 130, 246, 0.35) 35%, transparent 70%);
     bottom: 15%;
     right: -10%;
     animation: float-blob-2 30s infinite alternate ease-in-out;
 }
 
 @keyframes float-blob-1 {
-    0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(60px, 40px) scale(1.2); }
-    100% { transform: translate(-30px, 80px) scale(0.9); }
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(60px, 40px, 0) scale(1.15); }
+    100% { transform: translate3d(-30px, 80px, 0) scale(0.95); }
 }
 
 @keyframes float-blob-2 {
-    0% { transform: translate(0, 0) scale(1.1); }
-    50% { transform: translate(-80px, -50px) scale(0.85); }
-    100% { transform: translate(40px, 30px) scale(1.15); }
+    0% { transform: translate3d(0, 0, 0) scale(1.05); }
+    50% { transform: translate3d(-80px, -50px, 0) scale(0.9); }
+    100% { transform: translate3d(40px, 30px, 0) scale(1.1); }
 }
 
 /* ========================================
@@ -113,6 +127,9 @@ body::after {
     cursor: pointer;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-tap-highlight-color: transparent;
     transition: background 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
     z-index: 100;
 }
@@ -157,7 +174,7 @@ body::after {
     border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Glow dorado sutil estilo Apple */
+/* Glow dorado sutil estilo Apple (Optimizado para GPU) */
 .profile-glow {
     position: absolute;
     top: -5px;
@@ -166,8 +183,14 @@ body::after {
     bottom: -5px;
     border-radius: 50%;
     background: conic-gradient(from 0deg, #f59e0b, #d97706, #fbbf24, #f59e0b);
+    -webkit-filter: blur(8px);
     filter: blur(8px);
     opacity: 0.45;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
     animation: spin-glow 12s linear infinite;
     z-index: 1;
 }
@@ -183,6 +206,7 @@ body::after {
     letter-spacing: -0.5px;
     margin-bottom: 0.6rem;
     min-height: 2rem; /* Evitar saltos de línea durante la animación */
+    contain: layout; /* Evita que el cambio de texto provoque reflow en toda la página */
 }
 
 .dud {
@@ -200,8 +224,10 @@ body::after {
     border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 6px 14px;
     border-radius: 20px;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 .status-dot {
@@ -247,7 +273,6 @@ body::after {
     gap: 1rem;
 }
 
-/* Base de la Card */
 .link-card {
     display: flex;
     justify-content: space-between;
@@ -255,11 +280,14 @@ body::after {
     text-decoration: none;
     padding: 14px 18px;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    background: rgba(18, 18, 28, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    -webkit-transform: translate3d(0, 20px, 0);
+    transform: translate3d(0, 20px, 0);
+    -webkit-tap-highlight-color: transparent;
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
                 background-color 0.3s ease,
                 border-color 0.3s ease,
@@ -267,7 +295,6 @@ body::after {
     
     /* Animación de entrada */
     opacity: 0;
-    transform: translateY(20px);
     animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -279,15 +306,17 @@ body::after {
 @keyframes slideUp {
     to {
         opacity: 1;
-        transform: translateY(0);
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
 /* Hover de la card */
 .link-card:hover {
-    transform: translateY(-4px) scale(1.015);
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.12);
+    -webkit-transform: translate3d(0, -4px, 0) scale(1.015);
+    transform: translate3d(0, -4px, 0) scale(1.015);
+    background: rgba(25, 25, 38, 0.65);
+    border-color: rgba(255, 255, 255, 0.16);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 255, 255, 0.02);
 }
 
@@ -444,6 +473,16 @@ body::after {
     margin: 0;
 }
 
+.footer-author {
+    color: var(--neon-yellow);
+    font-weight: 600;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.footer-author:hover {
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
 .social-links {
     display: flex;
     justify-content: center;
@@ -464,6 +503,9 @@ body::after {
     color: rgba(255, 255, 255, 0.5);
     font-size: 1.15rem;
     text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
                 background-color 0.3s, 
                 color 0.3s, 
@@ -669,6 +711,9 @@ body::after {
     height: 100%;
     z-index: 0;
     pointer-events: none;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
 }
 
 /* ========================================

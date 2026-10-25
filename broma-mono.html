@@ -42,6 +42,8 @@
     <script>
         // Create continuous falling confetti
         function createConfetti() {
+            if (document.querySelectorAll('.confetti-piece').length > 45) return;
+
             const colors = ['#ff6b6b', '#ffd93d', '#6bcf7f', '#4d94ff', '#e716b3', '#ff69b4', '#ffa500', '#00ff00'];
 
             const confetti = document.createElement('div');
